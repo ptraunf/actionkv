@@ -26,7 +26,6 @@ impl ActionKV {
     pub fn open(path: &Path) -> io::Result<Self> {
         let f = OpenOptions::new()
             .read(true)
-            .write(true)
             .create(true)
             .append(true)
             .open(path)?;
@@ -116,12 +115,12 @@ impl ActionKV {
         }
         let checksum = crc32::checksum_ieee(&payload);
        let next_byte = SeekFrom::End(0);
-        let current_position: u64 = f.seek(SeekFrom::Current(0))?;
+        let current_position: u64 = f.stream_position()?;
         f.seek(next_byte)?;
         f.write_u32::<LittleEndian>(checksum).expect("Failed to write checksum");
         f.write_u32::<LittleEndian>(key_len as u32)?;
         f.write_u32::<LittleEndian>(val_len as u32)?;
-        f.write_all(&mut payload)?;
+        f.write_all(&payload)?;
 
         Ok(current_position)
     }
